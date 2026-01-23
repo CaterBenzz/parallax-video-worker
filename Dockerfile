@@ -1,6 +1,6 @@
-FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+FROM python:3.10-slim
 
-RUN pip install runpod requests diffusers transformers accelerate safetensors
+RUN pip install --no-cache-dir runpod requests
 
 COPY handler.py /handler.py
 
