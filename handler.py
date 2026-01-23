@@ -1,9 +1,21 @@
-def handler(event):
+import runpod
+import time
+
+def handler(job):
     """
-    Minimal RunPod Serverless handler.
+    Minimaler Dummy-Handler zum Verifizieren,
+    dass RunPod Jobs korrekt annimmt & ausführt.
     """
+    print("Job received:", job)
+
+    # Simuliere kurze Arbeit
+    time.sleep(2)
+
     return {
         "status": "ok",
-        "message": "Parallax worker is alive 🚀",
-        "input": event.get("input", {})
+        "echo": job.get("input", {})
     }
+
+runpod.serverless.start({
+    "handler": handler
+})
