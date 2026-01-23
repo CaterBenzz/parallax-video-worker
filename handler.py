@@ -25,7 +25,7 @@ def handler(event):
     print("[PARALLAX] Generating video...")
     time.sleep(2)
 
-    fake_video_bytes = b"FAKE_VIDEO_DATA"
+    fake_video_bytes = b"PARALLAX_HANDLER_V2_OK"
     video_base64 = base64.b64encode(fake_video_bytes).decode("utf-8")
 
     payload = {
