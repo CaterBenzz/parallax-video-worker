@@ -1,59 +1,47 @@
 import runpod
-import requests
 import base64
 import time
-import os
-import json
 
-PARALLAX_CALLBACK_URL = os.getenv("PARALLAX_CALLBACK_URL")
+print("[PARALLAX] Handler loading...")
 
 def handler(event):
-    print("[PARALLAX] Raw event received:")
-    print(json.dumps(event, indent=2))
-
+    print("[PARALLAX] Job received")
+    
     job_input = event.get("input", {})
-
-    parallax_job_id = job_input.get("job_id")
-
-    print("[PARALLAX] Parallax Job ID:", parallax_job_id)
-    print("[PARALLAX] Callback URL:", PARALLAX_CALLBACK_URL)
-
-    if not parallax_job_id:
-        raise ValueError("No job_id provided by Parallax")
-
-    # --- SIMULIERTE VIDEO-GENERIERUNG ---
-    print("[PARALLAX] Generating video...")
+    job_id = job_input.get("job_id", "unknown")
+    callback_url = job_input.get("callback_url", "")
+    
+    print(f"[PARALLAX] job_id={job_id}")
+    
+    # Simulate work
     time.sleep(2)
-
-    fake_video_bytes = b"PARALLAX_HANDLER_V2_OK"
-    video_base64 = base64.b64encode(fake_video_bytes).decode("utf-8")
-
-    payload = {
-        "job_id": parallax_job_id,
-        "status": "completed",
-        "video_base64": video_base64
-    }
-
-    print("[PARALLAX] Sending callback payload:")
-    print(json.dumps(payload, indent=2))
-
-    if PARALLAX_CALLBACK_URL:
-        response = requests.post(
-            PARALLAX_CALLBACK_URL,
-            json=payload,
-            timeout=10
-        )
-        print("[PARALLAX] Callback response code:", response.status_code)
-    else:
-        print("[PARALLAX] ERROR: PARALLAX_CALLBACK_URL not set")
-
-    def create_dummy_video():
-    mp4_bytes = bytes([
-        0x00, 0x00, 0x00, 0x1C, 0x66, 0x74, 0x79, 0x70,  # ftyp
-        ...
+    
+    # Minimal valid MP4
+    mp4 = bytes([
+        0x00,0x00,0x00,0x1C,0x66,0x74,0x79,0x70,
+        0x69,0x73,0x6F,0x6D,0x00,0x00,0x02,0x00,
+        0x69,0x73,0x6F,0x6D,0x69,0x73,0x6F,0x32,
+        0x6D,0x70,0x34,0x31,0x00,0x00,0x00,0x08,
+        0x66,0x72,0x65,0x65,0x00,0x00,0x00,0x00
     ])
-    return mp4_bytes
+    video_b64 = base64.b64encode(mp4).decode()
+    
+    # Send callback
+    if callback_url:
+        print(f"[PARALLAX] Sending callback to {callback_url}")
+        try:
+            import requests
+            resp = requests.post(callback_url, json={
+                "job_id": job_id,
+                "status": "completed",
+                "video_base64": video_b64
+            }, timeout=30)
+            print(f"[PARALLAX] Callback: {resp.status_code}")
+        except Exception as e:
+            print(f"[PARALLAX] Callback error: {e}")
+    
+    print("[PARALLAX] Done")
+    return {"status": "success", "job_id": job_id, "video_base64": video_b64}
 
-runpod.serverless.start({
-    "handler": handler
-})
+print("[PARALLAX] Starting worker...")
+runpod.serverless.start({"handler": handler})
