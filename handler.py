@@ -47,8 +47,12 @@ def handler(event):
     else:
         print("[PARALLAX] ERROR: PARALLAX_CALLBACK_URL not set")
 
-    return payload
-
+    def create_dummy_video():
+    mp4_bytes = bytes([
+        0x00, 0x00, 0x00, 0x1C, 0x66, 0x74, 0x79, 0x70,  # ftyp
+        ...
+    ])
+    return mp4_bytes
 
 runpod.serverless.start({
     "handler": handler
