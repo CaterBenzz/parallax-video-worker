@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir runpod requests
+RUN pip install --no-cache-dir runpod
 
 COPY handler.py /app/handler.py
 
