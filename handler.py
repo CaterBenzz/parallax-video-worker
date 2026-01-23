@@ -7,14 +7,19 @@ import json
 
 PARALLAX_CALLBACK_URL = os.getenv("PARALLAX_CALLBACK_URL")
 
-def handler(job):
-    print("[PARALLAX] Job received:")
-    print(json.dumps(job, indent=2))
+def handler(event):
+    print("[PARALLAX] Raw event received:")
+    print(json.dumps(event, indent=2))
 
-    job_input = job.get("input", {})
-    job_id = job_input.get("job_id") or job.get("id")
+    job_input = event.get("input", {})
 
-    print(f"[PARALLAX] job_id = {job_id}")
+    parallax_job_id = job_input.get("job_id")
+
+    print("[PARALLAX] Parallax Job ID:", parallax_job_id)
+    print("[PARALLAX] Callback URL:", PARALLAX_CALLBACK_URL)
+
+    if not parallax_job_id:
+        raise ValueError("No job_id provided by Parallax")
 
     # --- SIMULIERTE VIDEO-GENERIERUNG ---
     print("[PARALLAX] Generating video...")
@@ -23,29 +28,26 @@ def handler(job):
     fake_video_bytes = b"FAKE_VIDEO_DATA"
     video_base64 = base64.b64encode(fake_video_bytes).decode("utf-8")
 
-    result = {
-        "job_id": job_id,
+    payload = {
+        "job_id": parallax_job_id,
         "status": "completed",
         "video_base64": video_base64
     }
 
-    print("[PARALLAX] Generation done, sending callback...")
+    print("[PARALLAX] Sending callback payload:")
+    print(json.dumps(payload, indent=2))
 
-    # --- CALLBACK ---
     if PARALLAX_CALLBACK_URL:
-        try:
-            response = requests.post(
-                PARALLAX_CALLBACK_URL,
-                json=result,
-                timeout=10
-            )
-            print("[PARALLAX] Callback response:", response.status_code)
-        except Exception as e:
-            print("[PARALLAX] Callback failed:", str(e))
+        response = requests.post(
+            PARALLAX_CALLBACK_URL,
+            json=payload,
+            timeout=10
+        )
+        print("[PARALLAX] Callback response code:", response.status_code)
     else:
-        print("[PARALLAX] No PARALLAX_CALLBACK_URL set")
+        print("[PARALLAX] ERROR: PARALLAX_CALLBACK_URL not set")
 
-    return result
+    return payload
 
 
 runpod.serverless.start({
