@@ -1,28 +1,15 @@
-# v2
 import runpod
 import base64
 import time
 import os
+import sys
 
 print("[PARALLAX] Worker starting...")
 
-# Global model - lazy loaded
-PIPE = None
-CUDA_OK = False
+# Disable Intel XPU check
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
-def check_cuda():
-    global CUDA_OK
-    try:
-        import torch
-        CUDA_OK = torch.cuda.is_available()
-        if CUDA_OK:
-            print(f"[PARALLAX] CUDA OK: {torch.cuda.get_device_name(0)}")
-        else:
-            print("[PARALLAX] CUDA NOT AVAILABLE")
-        return CUDA_OK
-    except Exception as e:
-        print(f"[PARALLAX] CUDA check failed: {e}")
-        return False
+PIPE = None
 
 def load_model():
     global PIPE
@@ -30,13 +17,15 @@ def load_model():
     if PIPE is not None:
         return PIPE
     
-    if not CUDA_OK:
-        raise RuntimeError("CUDA not available")
-    
     print("[PARALLAX] Loading AnimateDiff...")
     start = time.time()
     
     import torch
+    print(f"[PARALLAX] PyTorch {torch.__version__}, CUDA: {torch.cuda.is_available()}")
+    
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA not available")
+    
     from diffusers import AnimateDiffPipeline, MotionAdapter, DDIMScheduler
     
     adapter = MotionAdapter.from_pretrained(
@@ -71,11 +60,6 @@ def handler(event):
     print(f"[PARALLAX] job_id={job_id}")
     
     try:
-        if not CUDA_OK:
-            check_cuda()
-        if not CUDA_OK:
-            raise RuntimeError("No CUDA GPU available")
-        
         pipe = load_model()
         
         from diffusers.utils import export_to_video
@@ -88,7 +72,7 @@ def handler(event):
         }
         enhanced = prompt + motion_prompts.get(camera_motion, "")
         
-        print(f"[PARALLAX] Generating...")
+        print(f"[PARALLAX] Generating 16 frames...")
         start = time.time()
         
         output = pipe(
@@ -120,6 +104,8 @@ def handler(event):
         
     except Exception as e:
         print(f"[PARALLAX] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         if callback_url:
             import requests
             requests.post(callback_url, json={
@@ -128,9 +114,6 @@ def handler(event):
                 "error": str(e)
             }, timeout=30)
         return {"status": "error", "job_id": job_id, "error": str(e)}
-
-# Check CUDA at startup (non-blocking)
-check_cuda()
 
 print("[PARALLAX] Starting runpod worker...")
 runpod.serverless.start({"handler": handler})
