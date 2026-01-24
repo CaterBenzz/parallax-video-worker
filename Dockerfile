@@ -8,7 +8,8 @@ RUN pip install --no-cache-dir \
     transformers==4.36.0 \
     accelerate==0.25.0 \
     safetensors \
-    imageio[ffmpeg]
+    imageio[ffmpeg] \
+    opencv-python-headless
 
 COPY handler.py /handler.py
 
