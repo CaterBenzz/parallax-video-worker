@@ -1,6 +1,12 @@
-FROM python:3.10-slim
+FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
 
-RUN pip install --no-cache-dir runpod requests
+RUN pip install --no-cache-dir \
+    runpod \
+    requests \
+    diffusers \
+    transformers \
+    accelerate \
+    safetensors
 
 COPY handler.py /handler.py
 
