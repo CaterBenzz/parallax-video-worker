@@ -1,4 +1,4 @@
-FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
 RUN pip install --no-cache-dir \
     runpod \
@@ -6,7 +6,8 @@ RUN pip install --no-cache-dir \
     diffusers \
     transformers \
     accelerate \
-    safetensors
+    safetensors \
+    imageio[ffmpeg]
 
 COPY handler.py /handler.py
 
