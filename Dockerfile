@@ -1,16 +1,6 @@
-FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+FROM huggingface/diffusers-pytorch-cuda:latest
 
-RUN pip install --no-cache-dir \
-    runpod==1.6.0 \
-    requests \
-    numpy \
-    huggingface_hub==0.20.0 \
-    diffusers==0.25.0 \
-    transformers==4.36.0 \
-    accelerate==0.25.0 \
-    safetensors \
-    imageio[ffmpeg] \
-    opencv-python-headless
+RUN pip install --no-cache-dir runpod requests
 
 COPY handler.py /handler.py
 
